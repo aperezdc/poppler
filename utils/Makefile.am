@@ -23,7 +23,8 @@ bin_PROGRAMS =					\
 	pdftotext				\
 	pdftohtml				\
 	pdfseparate				\
-	pdfunite
+	pdfunite                \
+	pdfstructtohtml
 
 if BUILD_NSS
 bin_PROGRAMS += pdfsig
@@ -140,6 +141,10 @@ noinst_LTLIBRARIES = libparseargs.la
 libparseargs_la_SOURCES =			\
 	parseargs.cc				\
 	parseargs.h
+
+pdfstructtohtml_SOURCES =			\
+	pdfstructtohtml.cc			\
+	$(common)
 
 # Yay, automake!  It should be able to figure out that it has to dist
 # pdftoppm.1, but nooo.  So we just add it here.
