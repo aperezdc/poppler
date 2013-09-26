@@ -139,6 +139,9 @@ PopplerLinkMapping *_poppler_link_mapping_new_from_annot_link (PopplerDocument *
 							       gint             page_num,
 							       AnnotLink       *link);
 
+PopplerFormFieldMapping *_poppler_form_field_mapping_new_from_form_field (PopplerFormField *form_field,
+									  gint page_num);
+
 char *_poppler_goo_string_to_utf8(GooString *s);
 gboolean _poppler_convert_pdf_date_to_gtime (GooString *date,
 					     time_t    *gdate);

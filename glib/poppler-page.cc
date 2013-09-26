@@ -1293,6 +1293,34 @@ poppler_page_free_link_mapping (GList *list)
   g_list_free (list);
 }
 
+
+PopplerFormFieldMapping *
+_poppler_form_field_mapping_new_from_form_field (PopplerFormField *form_field,
+						 gint page_num)
+{
+  PopplerFormFieldMapping *mapping;
+  Page *page;
+
+  g_assert (POPPLER_IS_FORM_FIELD (form_field));
+  g_assert (page_num >= 0);
+  g_assert (page_num < poppler_document_get_n_pages (form_field->document));
+
+  mapping = poppler_form_field_mapping_new ();
+  mapping->field = form_field;
+
+  form_field->widget->getRect (&mapping->area.x1, &mapping->area.y1,
+			       &mapping->area.x2, &mapping->area.y2);
+
+  page = form_field->document->doc->getPage (page_num + 1);
+
+  mapping->area.x1 -= page->getCropBox ()->x1;
+  mapping->area.x2 -= page->getCropBox ()->x1;
+  mapping->area.y1 -= page->getCropBox ()->y1;
+  mapping->area.y2 -= page->getCropBox ()->y1;
+
+  return mapping;
+}
+
 /**
  * poppler_page_get_form_field_mapping:
  * @page: A #PopplerPage
@@ -1319,21 +1347,12 @@ poppler_page_get_form_field_mapping (PopplerPage *page)
   
   for (i = 0; i < forms->getNumWidgets (); i++) {
     PopplerFormFieldMapping *mapping;
-    FormWidget *field;
+    PopplerFormField *field = _poppler_form_field_new (page->document,
+						       forms->getWidget (i));
 
-    mapping = poppler_form_field_mapping_new ();
-    
-    field = forms->getWidget (i);
+    mapping = _poppler_form_field_mapping_new_from_form_field (field,
+							       page->index);
 
-    mapping->field = _poppler_form_field_new (page->document, field);
-    field->getRect (&(mapping->area.x1), &(mapping->area.y1),
-		    &(mapping->area.x2), &(mapping->area.y2));
-
-    mapping->area.x1 -= page->page->getCropBox()->x1;
-    mapping->area.x2 -= page->page->getCropBox()->x1;
-    mapping->area.y1 -= page->page->getCropBox()->y1;
-    mapping->area.y2 -= page->page->getCropBox()->y1;
-    
     map_list = g_list_prepend (map_list, mapping);
   }
 
