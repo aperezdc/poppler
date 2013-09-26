@@ -1169,6 +1169,69 @@ poppler_page_init (PopplerPage *page)
 {
 }
 
+
+PopplerLinkMapping *
+_poppler_link_mapping_new_from_annot_link (PopplerDocument *document,
+					   gint page_num,
+					   AnnotLink *link)
+{
+  Page *page;
+  PopplerRectangle rect;
+  PopplerLinkMapping *mapping;
+  double width, height;
+
+  g_return_val_if_fail (POPPLER_IS_DOCUMENT (document), NULL);
+  g_return_val_if_fail (link != NULL, NULL);
+
+  g_assert (page_num >= 0);
+  g_assert (page_num < poppler_document_get_n_pages (document));
+
+  mapping = poppler_link_mapping_new ();
+  mapping->action = _poppler_action_new (document, link->getAction (), NULL);
+
+  page = document->doc->getPage (page_num + 1);
+  width = page->getCropWidth ();
+  height = page->getCropHeight ();
+
+  link->getRect (&rect.x1, &rect.y1, &rect.x2, &rect.y2);
+
+  rect.x1 -= page->getCropBox()->x1;
+  rect.x2 -= page->getCropBox()->x1;
+  rect.y1 -= page->getCropBox()->y1;
+  rect.y2 -= page->getCropBox()->y1;
+
+  switch (page->getRotate ())
+    {
+    case 90:
+      mapping->area.x1 = rect.y1;
+      mapping->area.y1 = height - rect.x2;
+      mapping->area.x2 = mapping->area.x1 + (rect.y2 - rect.y1);
+      mapping->area.y2 = mapping->area.y1 + (rect.x2 - rect.x1);
+
+      break;
+    case 180:
+      mapping->area.x1 = width - rect.x2;
+      mapping->area.y1 = height - rect.y2;
+      mapping->area.x2 = mapping->area.x1 + (rect.x2 - rect.x1);
+      mapping->area.y2 = mapping->area.y1 + (rect.y2 - rect.y1);
+
+      break;
+    case 270:
+      mapping->area.x1 = width - rect.y2;
+      mapping->area.y1 = rect.x1;
+      mapping->area.x2 = mapping->area.x1 + (rect.y2 - rect.y1);
+      mapping->area.y2 = mapping->area.y1 + (rect.x2 - rect.x1);
+
+      break;
+    default:
+      mapping->area.x1 = rect.x1;
+      mapping->area.y1 = rect.y1;
+      mapping->area.x2 = rect.x2;
+      mapping->area.y2 = rect.y2;
+    }
+  return mapping;
+}
+
 /**
  * poppler_page_get_link_mapping:
  * @page: A #PopplerPage
@@ -1198,55 +1261,10 @@ poppler_page_get_link_mapping (PopplerPage *page)
   
   for (i = 0; i < links->getNumLinks (); i++)
     {
-      PopplerLinkMapping *mapping;
-      PopplerRectangle rect;
-      LinkAction *link_action;
-      AnnotLink *link;
-      
-      link = links->getLink (i);
-      link_action = link->getAction ();
-      
       /* Create the mapping */
-      mapping = poppler_link_mapping_new ();
-      mapping->action = _poppler_action_new (page->document, link_action, NULL);
-
-      link->getRect (&rect.x1, &rect.y1, &rect.x2, &rect.y2);
-
-      rect.x1 -= page->page->getCropBox()->x1;
-      rect.x2 -= page->page->getCropBox()->x1;
-      rect.y1 -= page->page->getCropBox()->y1;
-      rect.y2 -= page->page->getCropBox()->y1;
-      
-      switch (page->page->getRotate ())
-        {
-        case 90:
-	  mapping->area.x1 = rect.y1;
-	  mapping->area.y1 = height - rect.x2;
-	  mapping->area.x2 = mapping->area.x1 + (rect.y2 - rect.y1);
-	  mapping->area.y2 = mapping->area.y1 + (rect.x2 - rect.x1);
-	  
-	  break;
-	case 180:
-	  mapping->area.x1 = width - rect.x2;
-	  mapping->area.y1 = height - rect.y2;
-	  mapping->area.x2 = mapping->area.x1 + (rect.x2 - rect.x1);
-	  mapping->area.y2 = mapping->area.y1 + (rect.y2 - rect.y1);
-	  
-	  break;
-	case 270:
-	  mapping->area.x1 = width - rect.y2;
-	  mapping->area.y1 = rect.x1;
-	  mapping->area.x2 = mapping->area.x1 + (rect.y2 - rect.y1);
-	  mapping->area.y2 = mapping->area.y1 + (rect.x2 - rect.x1);
-	  
-	  break;
-	default:
-	  mapping->area.x1 = rect.x1;
-	  mapping->area.y1 = rect.y1;
-	  mapping->area.x2 = rect.x2;
-	  mapping->area.y2 = rect.y2;
-	}
-
+      PopplerLinkMapping *mapping = _poppler_link_mapping_new_from_annot_link (page->document,
+									       page->index,
+									       links->getLink (i));
       map_list = g_list_prepend (map_list, mapping);
     }
   
