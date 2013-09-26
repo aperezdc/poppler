@@ -962,6 +962,53 @@ text_span_poppler_text_span (const TextSpan& span)
 }
 
 /**
+ * poppler_structure_element_get_form_field:
+ * @poppler_structure_element: A #PopplerStructureElement
+ *
+ * Obtains the #PopplerFormField out of an element of type
+ * %POPPLER_STRUCTURE_ELEMENT_FORM. The returned value must be freed
+ * with g_object_unref(). Note that there is one structure element
+ * per form field.
+ *
+ * Return value: (transfer full): A #PopplerFormField, or %NULL if
+ *    the element is not a %POPPLER_STRUCTURE_ELEMENT_FORM.
+ *
+ * Since: 0.26
+ */
+PopplerFormField *
+poppler_structure_element_get_form_field (PopplerStructureElement *poppler_structure_element)
+{
+  g_return_val_if_fail (POPPLER_IS_STRUCTURE_ELEMENT (poppler_structure_element), NULL);
+  g_return_val_if_fail (poppler_structure_element->elem != NULL, NULL);
+  g_return_val_if_fail (poppler_structure_element->elem->getType () != StructElement::Form, NULL);
+
+  switch (poppler_structure_element_get_form_role (poppler_structure_element))
+    {
+    case POPPLER_STRUCTURE_FORM_ROLE_RADIO_BUTTON:
+    case POPPLER_STRUCTURE_FORM_ROLE_PUSH_BUTTON:
+    case POPPLER_STRUCTURE_FORM_ROLE_TEXT_VALUE:
+    case POPPLER_STRUCTURE_FORM_ROLE_CHECKBOX:
+      /* TODO Handle read-only form items with a Role attribute. */
+      return NULL;
+
+    case POPPLER_STRUCTURE_FORM_ROLE_UNDEFINED: {
+      g_assert (poppler_structure_element->elem->getNumChildren () == 1);
+      StructElement *child = poppler_structure_element->elem->getChild (0);
+      g_assert (child->isObjectRef ());
+
+      FormWidget *widget = poppler_structure_element->document->doc->getCatalog ()
+          ->getForm ()->findWidgetByRef (child->getObjectRef ());
+
+      return poppler_document_get_form_field (poppler_structure_element->document,
+                                              widget->getID ());
+      break;
+    }
+    default:
+      g_assert_not_reached ();
+    }
+}
+
+/**
  * poppler_text_span_copy:
  * @poppler_text_span: a #PopplerTextSpan
  *

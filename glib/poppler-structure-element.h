@@ -318,7 +318,6 @@ gdouble                         *poppler_structure_element_get_column_gaps      
                                                                                    guint                       *n_values);
 gdouble                         *poppler_structure_element_get_column_widths      (PopplerStructureElement     *poppler_structure_element,
                                                                                    guint                       *n_values);
-
 PopplerStructureListNumbering    poppler_structure_element_get_list_numbering     (PopplerStructureElement     *poppler_structure_element);
 
 PopplerStructureFormRole         poppler_structure_element_get_form_role          (PopplerStructureElement     *poppler_structure_element);
@@ -330,6 +329,7 @@ guint                            poppler_structure_element_get_table_column_span
 gchar                          **poppler_structure_element_get_table_headers      (PopplerStructureElement     *poppler_structure_element);
 PopplerStructureTableScope       poppler_structure_element_get_table_scope        (PopplerStructureElement     *poppler_structure_element);
 gchar                           *poppler_structure_element_get_table_summary      (PopplerStructureElement     *poppler_structure_element);
+PopplerFormField                *poppler_structure_element_get_form_field         (PopplerStructureElement     *poppler_structure_element);
 
 #define POPPLER_TYPE_STRUCTURE_ELEMENT_ITER                                       (poppler_structure_element_iter_get_type ())
 GType                        poppler_structure_element_iter_get_type              (void) G_GNUC_CONST;

@@ -1380,6 +1380,38 @@ poppler_page_free_form_field_mapping (GList *list)
 }
 
 /**
+ * poppler_page_get_form_field_mapping_for_structure_element:
+ * @page: A #PopplerPage.
+ * @structure_element: a #PopplerStructureElement.
+ *
+ * Obtains the #PopplerFormFieldMapping for a single form field associated
+ * with a structure element of type %POPPLER_STRUCTURE_ELEMENT_FORM. The
+ * returned value must be freed with poppler_form_field_mapping_free().
+ *
+ * Return value: (transfer full): A #PopplerFormFieldMapping; or %NULL if
+ *    the element is not a %POPPLER_STRUCTURE_ELEMENT_FORM or if the given
+ *    structure element does not have content in the page.
+ *
+ * Since: 0.26
+ */
+PopplerFormFieldMapping *
+poppler_page_get_form_field_mapping_for_structure_element (PopplerPage             *page,
+                                                           PopplerStructureElement *structure_element)
+{
+  g_return_val_if_fail (POPPLER_IS_PAGE (page), NULL);
+  g_return_val_if_fail (POPPLER_IS_STRUCTURE_ELEMENT (structure_element), NULL);
+
+  if (page->index != poppler_structure_element_get_page (structure_element))
+    return NULL;
+
+  PopplerFormField *field = poppler_structure_element_get_form_field (structure_element);
+  if (field == NULL)
+    return NULL;
+
+  return _poppler_form_field_mapping_new_from_form_field (field, page->index);
+}
+
+/**
  * poppler_page_get_annot_mapping:
  * @page: A #PopplerPage
  *
