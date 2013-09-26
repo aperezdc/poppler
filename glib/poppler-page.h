@@ -92,6 +92,9 @@ GList              *poppler_page_get_form_field_mapping  (PopplerPage        *pa
 PopplerFormFieldMapping *
 poppler_page_get_form_field_mapping_for_structure_element(PopplerPage        *page,
                                                           PopplerStructureElement *structure_element);
+PopplerLinkMapping *
+     poppler_page_get_link_mapping_for_structure_element (PopplerPage        *page,
+                                                          PopplerStructureElement *structure_element);
 void                poppler_page_free_form_field_mapping (GList              *list);
 GList                 *poppler_page_get_annot_mapping    (PopplerPage        *page);
 void                   poppler_page_free_annot_mapping   (GList              *list);

@@ -135,6 +135,8 @@ PopplerAnnot      *_poppler_annot_line_new (Annot *annot);
 PopplerAnnot      *_poppler_annot_circle_new (Annot *annot);
 PopplerAnnot      *_poppler_annot_square_new (Annot *annot);
 
+AnnotLink *_poppler_structure_element_link_get_annot_link (PopplerStructureElement* element);
+
 PopplerLinkMapping *_poppler_link_mapping_new_from_annot_link (PopplerDocument *document,
 							       gint             page_num,
 							       AnnotLink       *link);

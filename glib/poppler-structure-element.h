@@ -330,6 +330,7 @@ gchar                          **poppler_structure_element_get_table_headers    
 PopplerStructureTableScope       poppler_structure_element_get_table_scope        (PopplerStructureElement     *poppler_structure_element);
 gchar                           *poppler_structure_element_get_table_summary      (PopplerStructureElement     *poppler_structure_element);
 PopplerFormField                *poppler_structure_element_get_form_field         (PopplerStructureElement     *poppler_structure_element);
+PopplerAction                   *poppler_structure_element_get_link_action        (PopplerStructureElement     *poppler_structure_element);
 
 #define POPPLER_TYPE_STRUCTURE_ELEMENT_ITER                                       (poppler_structure_element_iter_get_type ())
 GType                        poppler_structure_element_iter_get_type              (void) G_GNUC_CONST;

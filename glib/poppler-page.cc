@@ -1412,6 +1412,43 @@ poppler_page_get_form_field_mapping_for_structure_element (PopplerPage          
 }
 
 /**
+ * poppler_page_get_link_mapping_for_structure_element:
+ * @page: A #PopplerPage.
+ * @structure_element: A #PopplerStructureElement.
+ *
+ * Obtains the #PopplerLinkMapping for a link associated with a structure
+ * element of type %POPPLER_STRUCTURE_ELEMENT_LINK. The returned value
+ * must be freed with poppler_link_mapping_free().
+ *
+ * Return value: (transfer full): A #PopplerLinkMapping; or %NULL if
+ *    the element is not a %POPPLER_STRUCTURE_ELEMENT_LINK or if the
+ *    given structure element does not have content in the page.
+ */
+PopplerLinkMapping *
+poppler_page_get_link_mapping_for_structure_element (PopplerPage             *page,
+                                                     PopplerStructureElement *structure_element)
+{
+  g_return_val_if_fail (POPPLER_IS_PAGE (page), NULL);
+  g_return_val_if_fail (POPPLER_IS_STRUCTURE_ELEMENT (structure_element), NULL);
+
+  if (page->index != poppler_structure_element_get_page (structure_element))
+      return NULL;
+
+  AnnotLink *annot_link =
+      _poppler_structure_element_link_get_annot_link (structure_element);
+
+  if (annot_link == NULL)
+    return NULL;
+
+  PopplerLinkMapping *result =
+      _poppler_link_mapping_new_from_annot_link (structure_element->document,
+                                                 page->index,
+                                                 annot_link);
+  delete annot_link;
+  return result;
+}
+
+/**
  * poppler_page_get_annot_mapping:
  * @page: A #PopplerPage
  *

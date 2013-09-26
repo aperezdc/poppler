@@ -1212,6 +1212,112 @@ poppler_structure_element_get_text_spans (PopplerStructureElement *poppler_struc
 
 /* General Layout Attributes */
 
+typedef enum {
+  REFERENCE_UNKNOWN,
+  REFERENCE_ANNOT,
+  REFERENCE_ANNOT_LINK,
+} ReferenceType;
+
+
+static ReferenceType
+_element_reference_type (StructElement *element, XRef *xref)
+{
+  g_assert (element != NULL);
+
+  ReferenceType reftype = REFERENCE_UNKNOWN;
+  if (element->isObjectRef ())
+    {
+      Object obj;
+      const Ref ref = element->getObjectRef ();
+      if (xref->fetch(ref.num, ref.gen, &obj)->isDict("Annot"))
+        {
+          reftype = REFERENCE_ANNOT;
+          Object subtype;
+          if (obj.dictLookup("Subtype", &subtype)->isName("Link"))
+            reftype = REFERENCE_ANNOT_LINK;
+          subtype.free();
+        }
+
+      obj.free();
+    }
+
+  return reftype;
+}
+
+
+AnnotLink *
+_poppler_structure_element_link_get_annot_link (PopplerStructureElement *element)
+{
+  /* Find the object reference that points to a link annotation */
+  StructElement *objref = NULL;
+  XRef *xref = element->document->doc->getXRef ();
+
+  for (guint i = 0; i < element->elem->getNumChildren (); i++)
+    {
+      StructElement *child = element->elem->getChild (i);
+      if (_element_reference_type (child, xref) == REFERENCE_ANNOT_LINK)
+        {
+          objref = child;
+          break;
+        }
+    }
+
+  if (objref == NULL)
+    return NULL;
+
+  /* The object pointed by "objref" is an AnnotLink */
+  Object annot;
+  if (!xref->fetch(objref->getObjectRef ().num, objref->getObjectRef ().gen, &annot)->isDict ())
+    {
+      annot.free();
+      return NULL;
+    }
+
+  Object annotRef;
+  annotRef.initRef (objref->getObjectRef ().num, objref->getObjectRef ().gen);
+  AnnotLink *annot_link = new AnnotLink (element->document->doc,
+                                         annot.getDict (),
+                                         &annotRef);
+  annotRef.free();
+  annot.free();
+
+  if (!annot_link->isOk ())
+    {
+      delete annot_link;
+      annot_link = NULL;
+    }
+
+  return annot_link;
+}
+
+/**
+ * poppler_structure_element_link_get_action:
+ * @poppler_structure_element: A #PopplerStructureElement
+ *
+ * Return value: (transfer full): The #PopplerAction associated to the
+ *    link, or %NULL if the element is not a link element.
+ */
+PopplerAction *
+poppler_structure_element_get_link_action (PopplerStructureElement *poppler_structure_element)
+{
+  g_return_val_if_fail (POPPLER_IS_STRUCTURE_ELEMENT (poppler_structure_element), NULL);
+  g_return_val_if_fail (poppler_structure_element->elem != NULL, NULL);
+
+  if (poppler_structure_element->elem->getType () != StructElement::Link)
+    return NULL;
+
+  AnnotLink *annot_link =
+    _poppler_structure_element_link_get_annot_link (poppler_structure_element);
+
+  if (annot_link == NULL)
+    return NULL;
+
+  PopplerAction *result = _poppler_action_new (poppler_structure_element->document,
+                                               annot_link->getAction (), NULL);
+  delete annot_link;
+  return result;
+}
+
 /**
  * poppler_structure_element_get_placement:
  * @poppler_structure_element: A #PopplerStructureElement
